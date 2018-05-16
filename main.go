@@ -31,7 +31,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strings"
+	"time"
 )
 
 // general program info
@@ -52,14 +54,11 @@ const (
 	METRIC string = "METRIC"
 )
 
-/*
-init initializes this program
-*/
-func init() {
-
-	// initialize logger
-	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
-}
+// logging control flags
+var (
+	Tracing    = true
+	Developing = true
+)
 
 /*
 main starts this program
@@ -70,7 +69,18 @@ func main() {
 	fmt.Printf("  Name    : %s\n", progName)
 	fmt.Printf("  Release : %s - %s\n", progVersion, progDate)
 	fmt.Printf("  Purpose : %s\n", progPurpose)
-	fmt.Printf("  Info    : %s\n\n", progInfo)
+	fmt.Printf("  Info    : %s\n", progInfo)
+
+	// initialize logger
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
+
+	// set log output
+	file, err := os.OpenFile(os.Args[0]+".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	log.SetOutput(file)
 
 	id := 42
 	fruits := []string{"apple", "banana"}
@@ -88,7 +98,9 @@ func main() {
 	idle := 42.65
 	log.Println(logformat(METRIC, "cpu-user", user, "cpu-sys", sys, "cpu-idle", idle))
 
-	fmt.Printf("\n")
+	// trace example
+	rogueOne()
+
 	os.Exit(0)
 }
 
@@ -116,4 +128,52 @@ func logformat(level string, kvPairs ...interface{}) string {
 	}
 
 	return strings.Join(logElements, ", ")
+}
+
+/*
+trace traces a function
+- no input parameters
+resulting format:
+2018/05/16 12:06:21.146105 main.go:161: "level=TRACE", "entry=main.rogueOne", "file=/Users/klaus/go/src/klaus/logformat/main.go", "line=174"
+2018/05/16 12:06:21.467578 main.go:164: "level=TRACE", "exit=main.rogueOne", "duration=321.38664ms"
+*/
+func trace() func() {
+
+	callerName := "NO_CALLER"
+	callerFile := "NO_FILE"
+	callerLine := -1
+
+	fpcs := make([]uintptr, 1)
+
+	// get caller parameters (skip two levels)
+	n := runtime.Callers(2, fpcs)
+	if n != 0 {
+		caller := runtime.FuncForPC(fpcs[0] - 1)
+		if caller == nil {
+			callerName = "NIL_CALLER"
+		} else {
+			callerName = caller.Name()
+			callerFile, callerLine = caller.FileLine(fpcs[0] - 1)
+		}
+	}
+
+	start := time.Now()
+	log.Println(logformat(TRACE, "entry", callerName, "file", callerFile, "line", callerLine))
+
+	return func() {
+		log.Println(logformat(TRACE, "exit", callerName, "duration", time.Since(start)))
+	}
+}
+
+/*
+rogueOne does some work
+*/
+func rogueOne() {
+
+	if Tracing {
+		defer trace()()
+	}
+
+	// ... some work ...
+	time.Sleep(321 * time.Millisecond)
 }
