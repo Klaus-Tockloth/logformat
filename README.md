@@ -23,9 +23,9 @@ log.Println(logformat(METRIC, "cpu-user", user, "cpu-sys", sys, "cpu-idle", idle
 
 ## Output
 ```
-2018/05/16 06:58:50.470799 main.go:92: "level=INFO", "message=map build ok", "id=42", "fruits=[apple banana]"
-2018/05/16 06:58:50.471016 main.go:99: "level=DEVEL", "message=processing startet", "person={Sean 50}", "hash=map[foo:11 bar:22]"
-2018/05/16 06:58:50.471083 main.go:104: "level=METRIC", "cpu-user=23.69", "cpu-sys=33.64", "cpu-idle=42.65"
+2018/05/16 06:58:51.470799 main.go:92: "level=INFO", "message=map build ok", "id=42", "fruits=[apple banana]"
+2018/05/16 06:58:51.471016 main.go:99: "level=DEVEL", "message=processing startet", "person={Sean 50}", "hash=map[foo:11 bar:22]"
+2018/05/16 06:58:51.471083 main.go:104: "level=METRIC", "cpu-user=23.69", "cpu-sys=33.64", "cpu-idle=42.65"
 ```
 
 # trace()
